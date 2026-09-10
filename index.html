@@ -1,199 +1,294 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>MIDI WebSocket Sender</title>
-
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: Inter, Arial, sans-serif;
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        color: #111;
-        padding: 24px;
-      }
-
-      .container {
-        width: 100%;
-        max-width: 520px;
-        border: 1px solid #ddd;
-        border-radius: 14px;
-        padding: 28px;
-      }
-
-      h2 {
-        margin: 0 0 24px;
-        font-size: 1.4rem;
-        font-weight: 600;
-        line-height: 1.4;
-      }
-
-      .section {
-        margin-bottom: 18px;
-      }
-
-      input[type="file"] {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        background: transparent;
-        font-size: 0.95rem;
-      }
-
-      .buttons {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      button {
-        border: 1px solid #bbb;
-        background: transparent;
-        padding: 12px 18px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 0.95rem;
-        transition: 0.15s ease;
-      }
-
-      button:hover {
-        transform: translateY(-1px);
-      }
-
-      button:active {
-        transform: translateY(0);
-      }
-
-      #status {
-        margin-top: 22px;
-        padding-top: 16px;
-        border-top: 1px solid #e5e5e5;
-        font-size: 0.95rem;
-      }
-
-      .status-label {
-        font-weight: 600;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A simple, precise MIDI controller for the Laby.net piano. Load a MIDI file, connect, and send your music."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Lamidi — MIDI Controller</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"
+    ></script>
+    <script defer src="app.js"></script>
   </head>
-
   <body>
-    <div class="container">
-      <h2>
-        Select a MIDI file and send it through WebSocket for the Laby.net Server
-      </h2>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="./" aria-label="Lamidi home">
+          <span class="brand-icon" aria-hidden="true"
+            ><svg viewBox="0 0 32 32" fill="none">
+              <rect
+                x="5"
+                y="7"
+                width="22"
+                height="18"
+                rx="3"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <path
+                d="M12 8v16m8-16v16"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path d="M10 8v9h4V8m4 0v9h4V8" fill="currentColor" /></svg
+          ></span>
+          <span
+            >Lamidi<span class="brand-caption"
+              >MIDI WebSocket Controller</span
+            ></span
+          >
+        </a>
+        <span
+          id="connectionBadge"
+          class="status-badge"
+          data-state="disconnected"
+          ><span class="status-dot" aria-hidden="true"></span
+          ><span id="connectionLabel">Disconnected</span></span
+        >
+      </header>
 
-      <div class="section">
-        <input type="file" id="midiFile" accept=".mid,.midi" />
-      </div>
-
-      <div class="buttons">
-        <button onclick="connectWS()">Connect WS</button>
-        <button onclick="sendMidi()">Send MIDI</button>
-      </div>
-
-      <p id="status"><span class="status-label">Status:</span> Disconnected</p>
+      <main>
+        <div class="intro">
+          <p class="eyebrow">YOUR MUSIC. CONNECTED.</p>
+          <h1>Send MIDI<span class="accent">.</span></h1>
+          <p>
+            From your MIDI file to the Laby.net piano.<br
+              class="desktop-break"
+            />
+            Load a file, connect, and let it play.
+          </p>
+        </div>
+        <div class="workspace">
+          <section class="file-panel" aria-labelledby="fileHeading">
+            <div class="section-heading">
+              <h2 id="fileHeading">MIDI file</h2>
+              <span id="fileState" class="secondary-label"
+                >No file selected</span
+              >
+            </div>
+            <div id="dropzone" class="dropzone">
+              <input
+                id="midiFile"
+                class="sr-only"
+                type="file"
+                accept=".mid,.midi"
+                aria-label="Choose a MIDI file"
+              />
+              <div id="emptyFile" class="empty-file">
+                <div class="file-icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none">
+                    <path
+                      d="M14 5h14l9 9v25a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M27 5v10h10M22 33V22l8-2v11"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                    <ellipse
+                      cx="19"
+                      cy="34"
+                      rx="3"
+                      ry="2"
+                      fill="currentColor"
+                    />
+                    <ellipse
+                      cx="27"
+                      cy="32"
+                      rx="3"
+                      ry="2"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <h3>Drop your MIDI file here</h3>
+                <p>A little file. A whole performance.</p>
+              </div>
+              <div id="selectedFile" class="selected-file" hidden>
+                <span class="file-type" aria-hidden="true">MIDI</span>
+                <h3 id="fileName"></h3>
+                <p id="fileDetails"></p>
+                <canvas
+                  id="notePreview"
+                  height="76"
+                  aria-label="Overview of notes in the selected MIDI file"
+                  role="img"
+                ></canvas>
+              </div>
+              <button
+                id="chooseFile"
+                class="button choose-button"
+                type="button"
+              >
+                Choose a file
+              </button>
+              <p id="formatHint" class="format-hint">
+                MIDI files · .mid or .midi
+              </p>
+            </div>
+            <dl id="summary" class="summary" hidden>
+              <div>
+                <dt>Tracks</dt>
+                <dd id="trackCount">—</dd>
+              </div>
+              <div>
+                <dt>Notes</dt>
+                <dd id="noteCount">—</dd>
+              </div>
+              <div>
+                <dt>Duration</dt>
+                <dd id="duration">—</dd>
+              </div>
+              <div>
+                <dt>Tempo</dt>
+                <dd id="tempo">—</dd>
+              </div>
+            </dl>
+            <div class="transport">
+              <div class="timeline">
+                <span id="elapsed">0:00</span><span id="totalTime">0:00</span>
+              </div>
+              <progress
+                id="progress"
+                max="1"
+                value="0"
+                aria-label="Playback progress"
+              ></progress>
+              <div class="transport-actions">
+                <p id="actionHint">Choose a MIDI file to begin.</p>
+                <button id="stop" class="button" type="button" hidden>
+                  Stop</button
+                ><button
+                  id="send"
+                  class="button primary"
+                  type="button"
+                  disabled
+                >
+                  <svg aria-hidden="true" viewBox="0 0 16 16">
+                    <path d="m5 3 8 5-8 5Z" fill="currentColor" /></svg
+                  ><span id="sendLabel">Send MIDI</span>
+                </button>
+              </div>
+            </div>
+          </section>
+          <aside class="connection-panel" aria-labelledby="connectionHeading">
+            <div class="connection-top">
+              <span class="connection-icon" aria-hidden="true"
+                ><svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M8 3v5m8-5v5M6 8h12v3a6 6 0 0 1-12 0V8Zm6 9v4"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg
+              ></span>
+              <h2 id="connectionHeading">Connection</h2>
+              <p>Your link to the piano.</p>
+            </div>
+            <div class="destination">
+              <span class="eyebrow">DESTINATION</span
+              ><strong>Laby.net Piano</strong
+              ><code>wss://piano.laby.net/piano</code>
+            </div>
+            <button id="connect" class="button connect-button" type="button">
+              Connect
+            </button>
+            <p id="connectionHelp" class="connection-help">
+              Connect before sending your MIDI file.
+            </p>
+            <div class="activity">
+              <span class="eyebrow">ACTIVITY</span>
+              <p
+                id="status"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                Waiting for a MIDI file.
+              </p>
+            </div>
+          </aside>
+        </div>
+        <section class="library" aria-labelledby="libraryHeading">
+          <div class="library-heading">
+            <div>
+              <p class="eyebrow">DISCOVER SOMETHING TO PLAY</p>
+              <h2 id="libraryHeading">The MIDI library</h2>
+            </div>
+            <a
+              href="https://bitmidi.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Explore BitMidi ↗</a
+            >
+          </div>
+          <form
+            id="librarySearch"
+            class="library-search"
+            role="search"
+            aria-label="Search BitMidi"
+          >
+            <label class="sr-only" for="searchQuery">Song or artist</label
+            ><input
+              id="searchQuery"
+              type="search"
+              placeholder="Search a song, artist, or composer"
+              required
+              maxlength="160"
+              autocomplete="off"
+            /><button id="searchButton" class="button" type="submit">
+              Search
+            </button>
+          </form>
+          <p
+            id="libraryStatus"
+            class="library-status"
+            role="status"
+            aria-live="polite"
+          >
+            Find a MIDI on BitMidi and load it directly. No manual download
+            needed.
+          </p>
+          <ul id="libraryResults" class="library-results"></ul>
+          <div id="libraryPagination" class="library-pagination" hidden>
+            <button id="previousPage" class="button" type="button">
+              Previous</button
+            ><span id="libraryPage"></span
+            ><button id="nextPage" class="button" type="button">Next</button>
+          </div>
+        </section>
+        <p class="privacy-note">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect
+              x="3.5"
+              y="7"
+              width="9"
+              height="7"
+              rx="2"
+              stroke="currentColor"
+            />
+            <path
+              d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"
+              stroke="currentColor"
+            /></svg
+          >Files stay in your browser. Playback sends note events to the piano.
+        </p>
+      </main>
+      <footer>
+        <span>Made for the music.</span
+        ><span>Lamidi <span class="footer-divider">/</span> Laby.net</span>
+      </footer>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"></script>
-
-    <script>
-      let ws;
-      let midiData;
-      let worker;
-
-      const WS_URL = "wss://piano.laby.net/piano";
-
-      // Initialize worker
-      worker = new Worker("midi-worker.js");
-      worker.onmessage = (e) => {
-        const { type, payload } = e.data;
-        if (type === "sendNote" && ws && ws.readyState === 1) {
-          ws.send(JSON.stringify(payload));
-          console.log("Sent:", payload);
-        }
-      };
-
-      function setStatus(text) {
-        document.getElementById("status").innerHTML =
-          `<span class="status-label">Status:</span> ${text}`;
-      }
-
-      function connectWS() {
-        ws = new WebSocket(WS_URL);
-
-        ws.onopen = () => {
-          setStatus("Connected");
-        };
-
-        ws.onclose = () => {
-          setStatus("Disconnected");
-        };
-
-        ws.onerror = (err) => {
-          console.log("WS error", err);
-        };
-      }
-
-      document
-        .getElementById("midiFile")
-        .addEventListener("change", async (e) => {
-          const file = e.target.files[0];
-
-          if (!file) return;
-
-          const arrayBuffer = await file.arrayBuffer();
-
-          midiData = new Midi(arrayBuffer);
-
-          console.log("MIDI loaded:", midiData);
-
-          alert("MIDI loaded!");
-        });
-
-      function sendMidi() {
-        if (!ws || ws.readyState !== 1) {
-          alert("WebSocket not connected");
-          return;
-        }
-
-        if (!midiData) {
-          alert("Load a MIDI file first");
-          return;
-        }
-
-        const events = [];
-
-        midiData.tracks.forEach((track) => {
-          track.notes.forEach((note) => {
-            events.push({
-              time: note.time,
-              duration: note.duration,
-              midi: note.midi,
-              velocity: note.velocity,
-            });
-          });
-        });
-
-        events.sort((a, b) => a.time - b.time);
-
-        // Send events to worker for accurate timing (not throttled by background tabs)
-        worker.postMessage({
-          type: "start",
-          data: events,
-        });
-
-        setStatus("Playing...");
-      }
-    </script>
   </body>
 </html>
