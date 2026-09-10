@@ -4,6 +4,8 @@ A lightweight MIDI WebSocket controller for the Laby.net Minecraft piano.
 
 Live site: https://pingminus.github.io/Lamidi/
 
+![Lamidi in dark mode playing a MIDI file, with connection status, note preview, playback controls, and the BitMidi library](docs/demo.png)
+
 ## Use
 
 1. Choose or drop a `.mid` / `.midi` file, or search the BitMidi library and select **Load MIDI**.
